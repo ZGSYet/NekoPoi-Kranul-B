@@ -2871,17 +2871,16 @@ static int smack_flags_to_may(int flags)
 }
 
 /**
- * smack_msg_msg_alloc_security - Set the security blob for msg_msg
- * @msg: the object
+ * smack_of_shm - the smack pointer for the shm
+ * @shp: the object
  *
- * Returns 0
+ * Returns a pointer to the smack value
  */
-static int smack_msg_msg_alloc_security(struct msg_msg *msg)
+static struct smack_known *smack_of_shm(struct kern_ipc_perm *shp)
 {
-	struct smack_known **blob = smack_msg_msg(msg);
+	struct smack_known **blob = smack_ipc(shp); // Ubah 'isp' menjadi 'shp'
 
-	*blob = smk_of_current();
-	return 0;
+	return *blob;
 }
 
 /**
