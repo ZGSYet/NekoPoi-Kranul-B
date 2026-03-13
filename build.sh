@@ -73,7 +73,7 @@ compile_kernel() {
   echo -e "\nStarting compilation..."
   
   # 1. Make the base defconfig
-  make O=out ARCH=arm64 sweet_defconfig
+  make O=out ARCH=arm64 courbet_defconfig
   if [ "$KSU_BASE" ]; then
   make O=out ARCH=arm64 vendor/$KSU_BASE.config
   fi
