@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - "16"
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
+  workflow_dispatch: # Memungkinkan Anda menjalankan build secara manual dari tab Actions
 
 jobs:
   compile:
@@ -14,17 +18,15 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
-          
+
       - name: Set up dependencies
         run: |
           sudo apt update
           sudo apt install bc build-essential bison flex zip p7zip-full libc6 curl libstdc++6 git wget libssl-dev zstd lld python3 -y
 
-      
-      - name: Compile without KSU
-        # --- FIX: 'run:' was incorrectly indented ---
+      - name: Compile Kernel
         run: |
+          # Memberikan izin eksekusi pada skrip build
           chmod +x ./build.sh
+          # Menjalankan skrip build
           ./build.sh
-
-    
