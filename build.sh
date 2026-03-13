@@ -3,26 +3,34 @@
 # Compile script for kernel
 #
 
-# Exit immediately if a command exits with a non-zero status.
 set -e
-
-# Start builtin bash timer
 SECONDS=0
+
+# --- TELEGRAM CONFIG ---
+TG_TOKEN="8647652050:AAG0ZKtMuE4NhlOKx8EHz4VHfgPLlguMTqw"
+TG_CHAT_ID="7540957411"
+
+send_tg() {
+  curl -s -X POST https://api.telegram.org/bot$TG_TOKEN/sendMessage \
+  -d chat_id=$TG_CHAT_ID \
+  -d "text=$1" >/dev/null
+}
 
 # --- Helper Functions ---
 
 check_variables() {
 if [ "$KSU_BASE" ]; then
-  # This block runs if $KSU_BASE is set and NOT empty
   echo "KSU_BASE is set to: $KSU_BASE"
+  send_tg "ℹ️ KSU_BASE set: $KSU_BASE"
 else
-  # This block runs if $KSU_BASE is unset OR empty (e.g., KSU_BASE="")
   echo "KSU_BASE is not set."
 fi
 }
 
 setup_environment() {
   echo "Setting up build environment..."
+  send_tg "⚙️ Setting up build environment..."
+
   export ARCH=arm64
   export KBUILD_BUILD_USER=vbajs
   export KBUILD_BUILD_HOST=tbyool
@@ -33,10 +41,12 @@ setup_environment() {
 
 setup_toolchain() {
   echo "Setting up toolchains..."
+  send_tg "⬇️ Preparing toolchains..."
 
   # Setup Clang
   if [ ! -d "$PWD/clang" ]; then
     echo "Cloning Clang..."
+    send_tg "📥 Cloning Clang toolchain..."
     git clone https://gitlab.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r547379.git --depth=1 -b 15.0 clang
   else
     echo "Local clang dir found, using it."
@@ -45,13 +55,14 @@ setup_toolchain() {
   # Setup GCC
   if [ ! -d "$PWD/gcc32" ] && [ ! -d "$PWD/gcc64" ]; then
     echo "Downloading GCC..."
+    send_tg "📥 Downloading Eva GCC..."
+
     ASSET_URLS=$(curl -s "https://api.github.com/repos/mvaisakh/gcc-build/releases/latest" | grep "browser_download_url" | cut -d '"' -f 4 | grep -E "eva-gcc-arm.*\.xz")
     for url in $ASSET_URLS; do
       wget --content-disposition -L "$url"
     done
     
     for file in eva-gcc-arm*.xz; do
-      # The files are actually just plain tarballs named as .xz
       if [[ "$file" == *arm64* ]]; then
         tar -xf "$file" && mv gcc-arm64 gcc64
       else
@@ -71,14 +82,14 @@ update_path() {
 
 compile_kernel() {
   echo -e "\nStarting compilation..."
-  
-  # 1. Make the base defconfig
+  send_tg "🔨 Kernel compilation started..."
+
   make O=out ARCH=arm64 courbet_defconfig
+
   if [ "$KSU_BASE" ]; then
-  make O=out ARCH=arm64 vendor/$KSU_BASE.config
+    make O=out ARCH=arm64 vendor/$KSU_BASE.config
   fi
 
-  # 3. Run the main build
   make -j$(nproc --all) \
     O=out \
     ARCH=arm64 \
@@ -97,28 +108,42 @@ package_output() {
 
   if [ ! -f "$kernel" ] || [ ! -f "$dtbo" ] || [ ! -f "$dtb" ]; then
     echo -e "\nCompilation failed! Output files not found."
+    send_tg "❌ Kernel build failed!"
     exit 1
   fi
 
-  # Copy outputs to current directory with KSU_BASE prefix if exists
   if [ "$KSU_BASE" ]; then
   cp "$kernel" "./$KSU_BASE-Image"
   else
   cp "$kernel" "./Image"
   fi
+
   cp "$dtbo" "./dtbo.img"
   cp "$dtb" "./dtb.img"
 
   echo "Outputs copied to root directory with prefix '$KSU_BASE'"
+  send_tg "📦 Kernel outputs generated successfully."
 }
 
 print_summary() {
-  echo -e "\nCompleted in $((SECONDS / 60)) minute(s) and $((SECONDS % 60)) second(s) !"
+  BUILD_TIME="$((SECONDS / 60))m $((SECONDS % 60))s"
+
+  echo -e "\nCompleted in $BUILD_TIME !"
+
+  send_tg "✅ Kernel build finished
+⏱ Time: $BUILD_TIME
+📱 Device: courbet
+👤 Builder: $KBUILD_BUILD_USER"
 }
 
 # --- Main Execution ---
 
 main() {
+
+  send_tg "🚀 Kernel build started
+Device: courbet
+Host: $KBUILD_BUILD_HOST"
+
   check_variables
   setup_environment
   setup_toolchain
@@ -128,5 +153,4 @@ main() {
   print_summary
 }
 
-# Run the main function
 main
