@@ -3,7 +3,7 @@ name: Compiling kernel for MIUI
 on:
   push:
     branches:
-      - "MIUI-buildout"
+      - "16"
 
 jobs:
   compile:
