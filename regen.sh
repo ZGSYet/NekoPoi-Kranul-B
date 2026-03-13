@@ -2,7 +2,7 @@
 
 # Array of device names
 #devices=("sweet" "courbet" "tucana" "toco" "phoenix" "davinci")
-devices=("sweet")
+devices=("courbet")
 
 # Loop through the devices
 for device in "${devices[@]}"
