@@ -25,30 +25,11 @@ jobs:
           echo "ZIPNAME=[MIUI]-Spiteful-courbet-$(date '+%Y%m%d').zip" >> $GITHUB_ENV
           echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
 
-      - name: Clone KernelSU-Next and compile
-        # --- FIX: 'run:' was incorrectly indented ---
-        run: |
-          git clone https://github.com/vbajs/KernelSU-Next --depth=1 -b next KernelSU
-          export KSU_BASE="ksun"
-          chmod +x ./build.sh
-          ./.sh
-
-      - name: Clone RissuKSU and compile
-        # --- FIX: 'run:' was incorrectly indented ---
-        run: |
-          rm -rf KernelSU
-          git clone https://github.com/rsuntk/KernelSU --depth=1 -b v1.0.5-81-legacy KernelSU
-          export KSU_BASE="rksu"
-          make O=out mrproper
-          ./compile.sh
-
+    
       - name: Compile without KSU
         # --- FIX: 'run:' was incorrectly indented ---
         run: |
-          rm -rf KernelSU
-          patch -p1 < revert-ksu-config.patch
-          unset KSU_BASE
-          make O=out mrproper
+          chmod +x ./build.sh
           ./build.sh
 
       - name: Zip up and send to telegram
