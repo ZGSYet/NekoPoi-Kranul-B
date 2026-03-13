@@ -30,7 +30,7 @@ jobs:
         run: |
           git clone https://github.com/vbajs/KernelSU-Next --depth=1 -b next KernelSU
           export KSU_BASE="ksun"
-          chmod +x ./compile.sh
+          chmod +x ./build.sh
           ./compile.sh
 
       - name: Clone RissuKSU and compile
@@ -49,7 +49,7 @@ jobs:
           patch -p1 < revert-ksu-config.patch
           unset KSU_BASE
           make O=out mrproper
-          ./compile.sh
+          ./build.sh
 
       - name: Zip up and send to telegram
         # This step now also includes downloading the telegram script
